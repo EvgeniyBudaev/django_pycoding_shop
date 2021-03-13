@@ -1,25 +1,28 @@
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField, ModelForm
+from django.utils.safestring import mark_safe
 from PIL import Image
-from django import forms
 
 from .models import *
 
 
 class NotebookADminForm(ModelForm):
-  MIN_RESOLUTION = (400, 400)
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.fields['image'].help_text = f'Загружайте изображения с минимальным разрешением {self.MIN_RESOLUTION}'
+    self.fields['image'].help_text = mark_safe(f'<span style="color:red;font-size:12px;">Загружайте изображения с минимальным разрешением {Product.MIN_RESOLUTION} </span>')
 
   def clean_image(self):
     image = self.cleaned_data['image']
     img = Image.open(image)
-    min_height, min_width = self.MIN_RESOLUTION
+    min_height, min_width = Product.MIN_RESOLUTION
+    max_height, max_width = Product.MAX_RESOLUTION
+    if image.size > Product.MAX_IMAGE_SIZE:
+      raise ValidationError('Размер изображения не должен превышать 3Mb!')
     if img.height < min_height or img.width < min_width:
       raise ValidationError('Разрешение изображения меньше минимального!')
+    if img.height > max_height or img.width > max_width:
+      raise ValidationError('Разрешение изображения больше максимального!')
     return image
 
 
