@@ -1,0 +1,7 @@
+pip install django
+django-admin.py startproject django_pycoding_shop
+python manage.py startapp mainapp
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
