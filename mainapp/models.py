@@ -6,6 +6,27 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 User = get_user_model()  # это говорит что мы хотим использовать того юзера, который указан у нас в settings
 
 
+class LatestProductManager:
+  @staticmethod
+  def get_products_for_main_page(*args, **kwargs):
+    with_respect_to = kwargs.get('with_respect_to')
+    products = []
+    ct_models = ContentType.objects.filter(model__in=args)
+    for ct_model in ct_models:
+      model_products = ct_model.model_class()._base_manager.all().order_by('-id')[:5]
+      products.extend(model_products)
+    if with_respect_to:
+      ct_model = ContentType.objects.filter(model=with_respect_to)
+      if ct_models.exists():
+        if with_respect_to in args:
+          return sorted(products, key=lambda x: x.__class__._meta.model_name.startswith(with_respect_to), reverse=True)
+    return products
+
+
+class LatestProducts:
+  objects = LatestProductManager()
+
+
 # 1 Category - категория
 # 2 Product - продукт
 # 3 CartProduct - карточка продукта

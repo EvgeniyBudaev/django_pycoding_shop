@@ -12,3 +12,10 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 
+=== Товары разных моделей в одной через ContentType ===
+python manage.py shell
+from mainapp.models import LatestProducts
+LatestProducts.objects.get_products_for_main_page('smartphone')
+LatestProducts.objects.get_products_for_main_page('smartphone', 'notebook')
+LatestProducts.objects.get_products_for_main_page('smartphone', 'notebook', with_respect_to='notebook)  # первыми будут идти ноутбуки
+
