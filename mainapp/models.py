@@ -25,7 +25,7 @@ class MaxResolutionErrorException(Exception):
   pass
 
 
-class LatestProductManager:
+class LatestProductsManager:
   @staticmethod
   def get_products_for_main_page(*args, **kwargs):
     with_respect_to = kwargs.get('with_respect_to')
@@ -36,14 +36,16 @@ class LatestProductManager:
       products.extend(model_products)
     if with_respect_to:
       ct_model = ContentType.objects.filter(model=with_respect_to)
-      if ct_models.exists():
+      if ct_model.exists():
         if with_respect_to in args:
-          return sorted(products, key=lambda x: x.__class__._meta.model_name.startswith(with_respect_to), reverse=True)
+          return sorted(
+            products, key=lambda x: x.__class__._meta.model_name.startswith(with_respect_to), reverse=True
+          )
     return products
 
 
 class LatestProducts:
-  objects = LatestProductManager()
+  objects = LatestProductsManager()
 
 
 # 1 Category - категория
@@ -63,6 +65,9 @@ class Category(models.Model):
 
   def __str__(self):  # для того, чтобы категории представить в нашей админке
     return self.name
+
+  def get_absolute_url(self):
+    return reverse('category_detail', kwargs={'slug': self.slug})
 
 
 class Product(models.Model):
@@ -105,6 +110,9 @@ class Product(models.Model):
     self.image = InMemoryUploadedFile(filestream, 'ImageField', name, 'jpeg/image', sys.getsizeof(filestream), None)
     super().save(*args, **kwargs)
 
+    def get_model_name(self):
+        return self.__class__.__name__.lower()
+
 
 class Notebook(Product):
   diagonal = models.CharField(max_length=255, verbose_name='Диагональ')
@@ -115,7 +123,7 @@ class Notebook(Product):
   time_without_charge = models.CharField(max_length=255, verbose_name='Время работы аккумулятора')
 
   def __str__(self):
-    return f'{self.category.name} : {self.title}'
+    return "{} : {}".format(self.category.name, self.title)
 
   def get_absolute_url(self):
     return get_product_url(self, 'product_detail')
@@ -127,13 +135,15 @@ class Smartphone(Product):
   resolution = models.CharField(max_length=255, verbose_name='Разрешение экрана')
   accum_volume = models.CharField(max_length=255, verbose_name='Объем батареи')
   ram = models.CharField(max_length=255, verbose_name='Оперативная память')
-  sd = models.BooleanField(default=True)  # поддержка sd карт
-  sd_volume_max = models.CharField(max_length=255, verbose_name='Максимальный объем встраиваемой памяти')
+  sd = models.BooleanField(default=True, verbose_name='Наличие SD карты')
+  sd_volume_max = models.CharField(
+    max_length=255, null=True, blank=True, verbose_name='Максимальный объем встраивамой памяти'
+  )
   main_cam_mp = models.CharField(max_length=255, verbose_name='Главная камера')
   frontal_cam_mp = models.CharField(max_length=255, verbose_name='Фронтальная камера')
 
   def __str__(self):
-    return f'{self.category.name} : {self.title}'
+    return "{} : {}".format(self.category.name, self.title)
 
   def get_absolute_url(self):
     return get_product_url(self, 'product_detail')
