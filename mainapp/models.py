@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.urls import reverse
 
 from PIL import Image
 from io import BytesIO
@@ -10,6 +11,11 @@ import sys
 
 
 User = get_user_model()  # это говорит что мы хотим использовать того юзера, который указан у нас в settings
+
+
+def get_product_url(obj, viewname):
+  ct_model = obj.__class__._meta.model_name
+  return reverse(viewname, kwargs={'ct_model': ct_model, 'slug': obj.slug})
 
 
 class MinResolutionErrorException(Exception):
@@ -89,7 +95,7 @@ class Product(models.Model):
     # if img.height > max_height or img.width > max_width:
     #   raise MaxResolutionErrorException('Разрешение изображения больше максимального!')
     image = self.image
-    img = Image.opne(image)
+    img = Image.open(image)
     new_img = img.convert('RGB')
     resized_new_image = new_img.resize((200, 200), Image.ANTIALIAS)
     filestream = BytesIO()
@@ -111,6 +117,9 @@ class Notebook(Product):
   def __str__(self):
     return f'{self.category.name} : {self.title}'
 
+  def get_absolute_url(self):
+    return get_product_url(self, 'product_detail')
+
 
 class Smartphone(Product):
   diagonal = models.CharField(max_length=255, verbose_name='Диагональ')
@@ -125,6 +134,9 @@ class Smartphone(Product):
 
   def __str__(self):
     return f'{self.category.name} : {self.title}'
+
+  def get_absolute_url(self):
+    return get_product_url(self, 'product_detail')
 
 
 class CartProduct(models.Model):
