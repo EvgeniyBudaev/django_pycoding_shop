@@ -7,6 +7,22 @@ from PIL import Image
 from .models import *
 
 
+class SmartphoneAdminForm(ModelForm):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    instance = kwargs.get('instance')
+    if not instance.sd:
+      self.fields['sd_volume_max'].widgeet.attrs.update({
+        'readonly': True,
+        'style': 'background: lightgray;'
+      })
+
+  def clean(self):
+    if not self.cleaned_data['sd']:
+      self.cleaned_data['sd_volume_max'] = None
+    return self.cleaned_data
+
+
 class NotebookADminForm(ModelForm):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
@@ -36,6 +52,9 @@ class NotebookAdmin(admin.ModelAdmin):
 
 
 class SmartphoneAdmin(admin.ModelAdmin):
+  change_form_template = 'admin.html'
+  form = SmartphoneAdminForm
+
   def formfield_for_foreignkey(self, db_field, request, **kwargs):
     if db_field.name == 'category':
       return ModelChoiceField(Category.objects.filter(slug='smartphones'))

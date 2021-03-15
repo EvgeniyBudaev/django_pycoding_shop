@@ -156,7 +156,7 @@ class Smartphone(Product):
   ram = models.CharField(max_length=255, verbose_name='Оперативная память')
   sd = models.BooleanField(default=True, verbose_name='Наличие SD карты')
   sd_volume_max = models.CharField(
-    max_length=255, null=True, blank=True, verbose_name='Максимальный объем встраивамой памяти'
+    max_length=255, null=True, blank=True, verbose_name='Максимальный объем встраиваемой памяти'
   )
   main_cam_mp = models.CharField(max_length=255, verbose_name='Главная камера')
   frontal_cam_mp = models.CharField(max_length=255, verbose_name='Фронтальная камера')
@@ -166,6 +166,12 @@ class Smartphone(Product):
 
   def get_absolute_url(self):
     return get_product_url(self, 'product_detail')
+
+  @property
+  def sd(self):
+    if self.sd:
+      return 'Да'
+    return 'Нет'
 
 
 class CartProduct(models.Model):
