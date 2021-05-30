@@ -174,6 +174,12 @@ class Smartphone(Product):
     def get_absolute_url(self):
         return get_product_url(self, 'product_detail')
 
+    # @property
+    # def sd(self):
+    #     if self.sd:
+    #         return 'Да'
+    #     return 'Нет'
+
 
 class CartProduct(models.Model):
     user = models.ForeignKey('Customer', verbose_name='Покупатель',
