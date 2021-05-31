@@ -8,6 +8,10 @@ from django.utils import timezone
 User = get_user_model()  # это говорит что мы хотим использовать того юзера, который указан у нас в settings
 
 
+def get_models_for_count(*model_names):
+    return [models.Count(model_name) for model_name in model_names]
+
+
 def get_product_url(obj, viewname):
     ct_model = obj.__class__._meta.model_name
     return reverse(viewname, kwargs={'ct_model': ct_model, 'slug': obj.slug})
@@ -19,6 +23,25 @@ class MinResolutionErrorException(Exception):
 
 class MaxResolutionErrorException(Exception):
     pass
+
+
+class CategoryManager(models.Manager):
+    CATEGORY_NAME_COUNT_NAME = {
+        'Ноутбуки': 'notebook__count',
+        'Смартфоны': 'smartphone__count'
+    }
+
+    def get_queryset(self):
+        return super().get_queryset()
+
+    def get_categories_for_left_sidebar(self):
+        models = get_models_for_count('notebook', 'smartphone')
+        qs = list(self.get_queryset().annotate(*models))
+        data = [
+            dict(name=c.name, url=c.get_absolute_url(), count=getattr(c, self.CATEGORY_NAME_COUNT_NAME[c.name]))
+            for c in qs
+        ]
+        return data
 
 
 class LatestProductsManager:
@@ -61,6 +84,7 @@ class Category(models.Model):
                             verbose_name='Имя категории')  # verbose_name - это чтобы в админке колонка таблицы так называлась
     slug = models.SlugField(
         unique=True)  # конечный endpoint, к примеру /categories/notebooks/, т.е. notebooks это наш slug
+    objects = CategoryManager()
 
     def __str__(self):  # для того, чтобы категории представить в нашей админке
         return self.name
